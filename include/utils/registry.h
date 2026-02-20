@@ -6,11 +6,18 @@
 #include "logger.h"   
 
 // Function prototypes
-int set_registry_key(HKEY hive, const char* keyPath, const char* valueName, 
-                   const void* data, DWORD dataSize, DWORD valueType);
+int set_registry_key(HKEY hive, const char* keyPath, const char* valueName,
+                     const void* data, DWORD dataSize, DWORD valueType);
 
-char* get_registry_key(HKEY hive, const char* keyPath, const char* valueName, 
-                     DWORD* dataSize);
+BYTE* get_registry_key(HKEY hive, const char* keyPath, const char* valueName,
+                       DWORD* dataSize);
+
+int append_registry_value(HKEY hive, const char* keyPath, const char* valueName,
+                        const void* data, DWORD dataSize);
+
+int delete_registry_value(HKEY hive, const char* keyPath, const char* valueName);
+
+int delete_registry_key(HKEY hive, const char* keyPath);
 
 int registry_value_exists(HKEY hive, const char* keyPath, const char* valueName);
 
