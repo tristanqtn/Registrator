@@ -11,19 +11,23 @@ registrator/
 │
 ├── include/
 │   ├── core/
-│   │   └── common.h          # Global includes (windows.h, winreg.h, ...) and project-wide constants
+│   │   ├── common.h            # Global includes (windows.h, winreg.h, ...) and project-wide constants
+│   │   └── mitigation_option.h # MitigationOption registry value modifiers 
 │   └── utils/
 │       ├── logger.h           # Logging types, banner macros (TOOL_NAME, TOOL_VERSION, ...)
 │       ├── registry.h         # Registry read/write/check prototypes
+│       ├── service.h          # Service creation/modification/deletion prototypes
 │       └── system.h           # Elevation check prototype and elevation_status_t enum
 │
 ├── src/
 │   ├── core/
-│   │   ├── common.c           # Definitions of shared binary constants (e.g. MitigationOptions values)
-│   │   └── main.c             # Entry point — orchestrates elevation check, registry operations
+│   │   ├── common.c            # Definitions of shared binary constants (e.g. MitigationOptions values)
+│   │   ├── main.c              # Entry point — orchestrates elevation check, registry operations
+│   │   └── mitigation_option.c # MitigationOption registry value modifiers 
 │   └── utils/
 │       ├── logger.c           # print_banner(), pretty_print(), print_binary_data()
-│       ├── registry.c         # set_registry_key(), get_registry_key(), registry_value_exists()
+│       ├── registry.c         # set_registry_key(), get_registry_key(), append_registry_value(), delete_registry_value(), delete_registry_key(), registry_value_exists()
+│       ├── service.c          # create_service(), start_service(), stop_service(), delete_service(), modify_service()
 │       └── system.c           # is_elevated() via CheckTokenMembership
 │
 └── Makefile

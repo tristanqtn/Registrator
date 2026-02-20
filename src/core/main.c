@@ -1,7 +1,6 @@
-#include "../../include/utils/logger.h"
-#include "../../include/utils/registry.h"
-#include "../../include/utils/system.h"
 #include "../../include/core/common.h"
+#include "../../include/core/mitigation.h"
+#include "../../include/utils/system.h"
 
 int main(void) {
 
@@ -20,49 +19,8 @@ int main(void) {
             pretty_print(LOG_ERROR, "Could not determine elevation status");
             return 1;
     }
-    
-    if (registry_value_exists(HKEY_LOCAL_MACHINE, MITIGATION_OPTIONS_REGISTRY_PATH, MITIGATION_OPTIONS_VALUE_NAME)) {
-        pretty_print(LOG_INFO, "Reading existing registry value");
-        DWORD dataSize;
-        char* value = get_registry_key(HKEY_LOCAL_MACHINE, MITIGATION_OPTIONS_REGISTRY_PATH, MITIGATION_OPTIONS_VALUE_NAME, &dataSize);
-        
-        if (value) {
-            pretty_print(LOG_SUCCESS, "Current registry value:");
-            print_binary_data((const BYTE*)value, dataSize);
-            free(value);
-        }
-    } else {
-        pretty_print(LOG_INFO, "Registry value does not exist, will create it");
-    }
-    
-    // Set new registry value
-    pretty_print(LOG_INFO, "Setting registry value");
-    int result = set_registry_key(
-        HKEY_LOCAL_MACHINE, 
-        MITIGATION_OPTIONS_REGISTRY_PATH,
-        MITIGATION_OPTIONS_VALUE_NAME,
-        MITIGATION_OPTIONS_VALUE_MICROSOFT_SIGNED_ONLY, 
-        sizeof(MITIGATION_OPTIONS_VALUE_MICROSOFT_SIGNED_ONLY), 
-        REG_BINARY
-    );
-    
-    if (result != 0) {
-        pretty_print(LOG_ERROR, "Failed to set registry value");
-        return 1;
-    }
-    
-    // Verify the value was set
-    pretty_print(LOG_INFO, "Verifying registry value was set");
-    DWORD dataSize;
-    char* value = get_registry_key(HKEY_LOCAL_MACHINE, MITIGATION_OPTIONS_REGISTRY_PATH, MITIGATION_OPTIONS_VALUE_NAME, &dataSize);
-    
-    if (value) {
-        pretty_print(LOG_SUCCESS, "Successfully retrieved registry value");
-        print_binary_data((const BYTE*)value, dataSize);
-        free(value);
-    } else {
-        pretty_print(LOG_ERROR, "Failed to retrieve registry value");
-    }
+
+    set_mitigation_policy();
     
     printf("\nPress Enter to exit...");
     getchar();
