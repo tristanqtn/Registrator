@@ -6,6 +6,7 @@
 #include <string.h>
 #include <windows.h>
 #include <winreg.h>
+#include <stdarg.h>
 
 // MitigationOptions
 #define MITIGATION_OPTIONS_DATA_SIZE 20

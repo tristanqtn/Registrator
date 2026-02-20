@@ -1,7 +1,7 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
-#include "common.h"
+#include <windows.h>   
 #include "logger.h"
 
 typedef enum {

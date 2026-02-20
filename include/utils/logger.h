@@ -1,9 +1,9 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#include "common.h"
-
-#include <stdarg.h>
+#include <stdio.h>     
+#include <stdarg.h>  
+#include <windows.h>  
 
 #define TOOL_NAME    "Registrator"
 #define TOOL_VERSION "1.0.0"

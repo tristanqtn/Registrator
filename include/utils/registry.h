@@ -1,8 +1,9 @@
 #ifndef REGISTRY_H
 #define REGISTRY_H
 
-#include "common.h"
-#include "logger.h"
+#include <windows.h> 
+#include <winreg.h>    
+#include "logger.h"   
 
 // Function prototypes
 int set_registry_key(HKEY hive, const char* keyPath, const char* valueName, 

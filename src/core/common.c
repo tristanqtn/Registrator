@@ -1,4 +1,4 @@
-#include "../include/common.h"
+#include "../../include/core/common.h"
 
 // Static Variables
 const BYTE MITIGATION_OPTIONS_VALUE_MICROSOFT_SIGNED_ONLY[MITIGATION_DATA_SIZE] = {

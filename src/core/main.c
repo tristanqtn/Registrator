@@ -1,7 +1,7 @@
-#include "../include/logger.h"
-#include "../include/registry.h"
-#include "../include/system.h"
-#include "../include/common.h"
+#include "../../include/utils/logger.h"
+#include "../../include/utils/registry.h"
+#include "../../include/utils/system.h"
+#include "../../include/core/common.h"
 
 int main(void) {
 

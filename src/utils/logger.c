@@ -1,6 +1,12 @@
-#include "../include/logger.h"
-#include <stdarg.h>
+#include "../../include/utils/logger.h"
 
+//////////////////////////////////////////////////////////////
+// Output Functions //////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+/**
+ * Function to display the tool banner
+ */
 void print_banner(void) {
     printf("\n");
     printf("  ____            _     _             _\n");
@@ -21,7 +27,11 @@ void print_banner(void) {
     printf("\n");
 }
 
-
+/**
+ * Function to display outputs with different status
+ * @param level: Logging level
+ * @param format: Content to display with extensive parameters
+ */
 void pretty_print(log_level_t level, const char* format, ...) {
     if (!format) {
         fprintf(stderr, "[!] Invalid format string\n");
@@ -65,6 +75,11 @@ void pretty_print(log_level_t level, const char* format, ...) {
     fflush(output_stream);
 }
 
+/**
+ * Function to display correctly binary data from registry keys
+ * @param data: Data content to display
+ * @param size: Size of the binary word to display
+ */
 void print_binary_data(const BYTE* data, DWORD size) {
     if (!data) {
         pretty_print(LOG_ERROR, "Invalid data pointer");
