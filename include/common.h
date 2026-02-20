@@ -17,7 +17,7 @@
 #define PENDING_RENAME_OPERATION_NAME "PendingFileRenameOperations"
 
 // Exported Static Variables
-extern const BYTE mitigationValue_MicrosoftSignedOnly[MITIGATION_DATA_SIZE];
-extern const BYTE mitigationValue_default[MITIGATION_DATA_SIZE];
+extern const BYTE MITIGATION_OPTIONS_VALUE_MICROSOFT_SIGNED_ONLY[MITIGATION_DATA_SIZE];
+extern const BYTE MITIGATION_OPTIONS_VALUE_DEFAULT[MITIGATION_DATA_SIZE];
 
 #endif // COMMON_H

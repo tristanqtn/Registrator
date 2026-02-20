@@ -4,6 +4,9 @@
 #include "../include/common.h"
 
 int main(void) {
+
+    print_banner();
+
     elevation_status_t status = is_elevated();
     
     switch (status) {
@@ -18,10 +21,10 @@ int main(void) {
             return 1;
     }
     
-    if (registryValueExists(HKEY_LOCAL_MACHINE, MITIGATION_REGISTRY_PATH, MITIGATION_VALUE_NAME)) {
+    if (registry_value_exists(HKEY_LOCAL_MACHINE, MITIGATION_OPTIONS_REGISTRY_PATH, MITIGATION_OPTIONS_VALUE_NAME)) {
         pretty_print(LOG_INFO, "Reading existing registry value");
         DWORD dataSize;
-        char* value = getRegistryKey(HKEY_LOCAL_MACHINE, MITIGATION_REGISTRY_PATH, MITIGATION_VALUE_NAME, &dataSize);
+        char* value = get_registry_key(HKEY_LOCAL_MACHINE, MITIGATION_OPTIONS_REGISTRY_PATH, MITIGATION_OPTIONS_VALUE_NAME, &dataSize);
         
         if (value) {
             pretty_print(LOG_SUCCESS, "Current registry value:");
@@ -34,12 +37,12 @@ int main(void) {
     
     // Set new registry value
     pretty_print(LOG_INFO, "Setting registry value");
-    int result = setRegistryKey(
+    int result = set_registry_key(
         HKEY_LOCAL_MACHINE, 
-        MITIGATION_REGISTRY_PATH,
-        MITIGATION_VALUE_NAME,
-        mitigationValue_MicrosoftSignedOnly, 
-        sizeof(mitigationValue_MicrosoftSignedOnly), 
+        MITIGATION_OPTIONS_REGISTRY_PATH,
+        MITIGATION_OPTIONS_VALUE_NAME,
+        MITIGATION_OPTIONS_VALUE_MICROSOFT_SIGNED_ONLY, 
+        sizeof(MITIGATION_OPTIONS_VALUE_MICROSOFT_SIGNED_ONLY), 
         REG_BINARY
     );
     
@@ -51,7 +54,7 @@ int main(void) {
     // Verify the value was set
     pretty_print(LOG_INFO, "Verifying registry value was set");
     DWORD dataSize;
-    char* value = getRegistryKey(HKEY_LOCAL_MACHINE, MITIGATION_REGISTRY_PATH, MITIGATION_VALUE_NAME, &dataSize);
+    char* value = get_registry_key(HKEY_LOCAL_MACHINE, MITIGATION_OPTIONS_REGISTRY_PATH, MITIGATION_OPTIONS_VALUE_NAME, &dataSize);
     
     if (value) {
         pretty_print(LOG_SUCCESS, "Successfully retrieved registry value");

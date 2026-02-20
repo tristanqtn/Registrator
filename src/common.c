@@ -1,7 +1,7 @@
 #include "../include/common.h"
 
-// Définitions des variables statiques
-const BYTE mitigationValue_MicrosoftSignedOnly[MITIGATION_DATA_SIZE] = {
+// Static Variables
+const BYTE MITIGATION_OPTIONS_VALUE_MICROSOFT_SIGNED_ONLY[MITIGATION_DATA_SIZE] = {
     0x00, 0x00, 0x00, 0x00,
     0x00, 0x10, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00,
@@ -9,7 +9,7 @@ const BYTE mitigationValue_MicrosoftSignedOnly[MITIGATION_DATA_SIZE] = {
     0x00, 0x00, 0x00, 0x00
 };
 
-const BYTE mitigationValue_default[MITIGATION_DATA_SIZE] = {
+const BYTE MITIGATION_OPTIONS_VALUE_DEFAULT[MITIGATION_DATA_SIZE] = {
     0x00, 0x00, 0x00, 0x00,
     0x00, 0x20, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00,

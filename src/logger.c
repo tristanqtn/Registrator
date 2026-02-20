@@ -1,6 +1,27 @@
 #include "../include/logger.h"
 #include <stdarg.h>
 
+void print_banner(void) {
+    printf("\n");
+    printf("  ____            _     _             _\n");
+    printf(" |  _ \\ ___  __ _(_)___| |_ _ __ __ _| |_ ___  _ __\n");
+    printf(" | |_) / _ \\/ _` | / __| __| '__/ _` | __/ _ \\| '__|\n");
+    printf(" |  _ <  __/ (_| | \\__ \\ |_| | | (_| | || (_) | |\n");
+    printf(" |_| \\_\\___|\\__, |_|___/\\__|_|  \\__,_|\\__\\___/|_|\n");
+    printf("            |___/\n");
+    printf("\n");
+    printf("  +---------------------------------------------------------+\n");
+    printf("  |                                                         |\n");
+    printf("  |  Description : %-40s |\n", TOOL_DESC);
+    printf("  |  Version     : %-40s |\n", TOOL_VERSION);
+    printf("  |  Author      : %-40s |\n", TOOL_AUTHOR);
+    printf("  |  Target      : %-40s |\n", "Windows x64 (requires elevation)");
+    printf("  |                                                         |\n");
+    printf("  +---------------------------------------------------------+\n");
+    printf("\n");
+}
+
+
 void pretty_print(log_level_t level, const char* format, ...) {
     if (!format) {
         fprintf(stderr, "[!] Invalid format string\n");

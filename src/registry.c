@@ -13,7 +13,7 @@
  *  - https://learn.microsoft.com/fr-fr/windows/win32/api/winreg/nf-winreg-regcreatekeyexa
  *  - https://learn.microsoft.com/fr-fr/windows/win32/api/winreg/nf-winreg-regsetvalueexa
  */
-int setRegistryKey(HKEY hive, const char* keyPath, const char* valueName, 
+int set_registry_key(HKEY hive, const char* keyPath, const char* valueName, 
                    const void* data, DWORD dataSize, DWORD valueType) {
     if (!keyPath || !valueName || !data) {
         pretty_print(LOG_ERROR, "Invalid parameters");
@@ -74,7 +74,7 @@ int setRegistryKey(HKEY hive, const char* keyPath, const char* valueName,
  *  - https://learn.microsoft.com/fr-fr/windows/win32/api/winreg/nf-winreg-regopenkeyexa
  *  - https://learn.microsoft.com/fr-fr/windows/win32/api/winreg/nf-winreg-regqueryvalueexa
  */
-char* getRegistryKey(HKEY hive, const char* keyPath, const char* valueName, DWORD* dataSize) {
+char* get_registry_key(HKEY hive, const char* keyPath, const char* valueName, DWORD* dataSize) {
     if (!keyPath || !valueName || !dataSize) {
         pretty_print(LOG_ERROR, "Invalid parameters");
         return NULL;
@@ -129,7 +129,7 @@ char* getRegistryKey(HKEY hive, const char* keyPath, const char* valueName, DWOR
  * - https://learn.microsoft.com/fr-fr/windows/win32/api/winreg/nf-winreg-regopenkeyexa
  * - https://learn.microsoft.com/fr-fr/windows/win32/api/winreg/nf-winreg-regqueryvalueexa
  */
-int registryValueExists(HKEY hive, const char* keyPath, const char* valueName) {
+int registry_value_exists(HKEY hive, const char* keyPath, const char* valueName) {
     if (!keyPath || !valueName) {
         pretty_print(LOG_ERROR, "Invalid parameters for registry value existence check");
         return 0;
