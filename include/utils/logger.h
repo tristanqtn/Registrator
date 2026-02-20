@@ -1,25 +1,20 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#include <stdio.h>     
-#include <stdarg.h>  
-#include <windows.h>  
+#include <stdarg.h>
+#include <stdio.h>
+#include <windows.h>
 
-#define TOOL_NAME    "Registrator"
+#define TOOL_NAME "Registrator"
 #define TOOL_VERSION "1.0.0"
-#define TOOL_AUTHOR  "Drachh_"
-#define TOOL_DESC    "Windows Multitool Framework"
+#define TOOL_AUTHOR "Drachh_"
+#define TOOL_DESC "Windows Multitool Framework"
 
-typedef enum {
-    LOG_ERROR,
-    LOG_SUCCESS,
-    LOG_INFO,
-    LOG_WARNING
-} log_level_t;
+typedef enum { LOG_ERROR, LOG_SUCCESS, LOG_INFO, LOG_WARNING } log_level_t;
 
 // Function prototypes
 void print_banner(void);
-void pretty_print(log_level_t level, const char* format, ...);
-void print_binary_data(const BYTE* data, DWORD size);
+void pretty_print(log_level_t level, const char *format, ...);
+void print_binary_data(const BYTE *data, DWORD size);
 
 #endif // LOGGER_H
