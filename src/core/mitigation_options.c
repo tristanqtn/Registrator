@@ -1,4 +1,4 @@
-#include "../../include/core/mitigation.h"
+#include "../../include/core/mitigation_option.h"
 
 /**
  * Check read, apply and verify the MitigationOptions registry policy
@@ -73,8 +73,7 @@ int unset_mitigation_policy(void) {
       return -1;
     }
 
-    DWORD dataSize;
-    BYTE *value =
+    value =
         get_registry_key(HKEY_LOCAL_MACHINE, MITIGATION_OPTIONS_REGISTRY_PATH,
                          MITIGATION_OPTIONS_VALUE_NAME, &dataSize);
     if (value) {

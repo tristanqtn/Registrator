@@ -1,5 +1,5 @@
 #include "../../include/core/common.h"
-#include "../../include/core/mitigation.h"
+#include "../../include/core/mitigation_option.h"
 #include "../../include/utils/system.h"
 
 int main(void) {
