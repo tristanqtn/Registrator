@@ -48,19 +48,25 @@ static SC_HANDLE open_service(SC_HANDLE hSCM, const char *serviceName,
 
 /**
  * Poll the service status until it leaves a pending state or the timeout
- * elapses
- * @param hService:       Handle to the service
- * @param pendingState:   The transitional state to wait through (e.g.,
- * SERVICE_STOP_PENDING)
- * @param targetState:    The expected final state (e.g., SERVICE_STOPPED)
+ * elapses.
+ *
+ * Elapsed time is measured with GetTickCount64() rather than accumulated Sleep
+ * durations to avoid drift: QueryServiceStatus itself takes non-zero time, so
+ * purely summing sleep intervals would undercount real elapsed time and could
+ * loop past the intended deadline.
+ *
+ * @param hService:     Handle to the service
+ * @param pendingState: The transitional state to wait through (e.g.,
+ *                      SERVICE_STOP_PENDING)
+ * @param targetState:  The expected final state (e.g., SERVICE_STOPPED)
  * @return: 1 if target state reached, 0 on timeout or error
  */
 static int wait_for_service_state(SC_HANDLE hService, DWORD pendingState,
                                   DWORD targetState) {
   SERVICE_STATUS status;
-  DWORD elapsed = 0;
+  ULONGLONG start = GetTickCount64();
 
-  while (elapsed < SERVICE_STATUS_TIMEOUT_MS) {
+  while (GetTickCount64() - start < SERVICE_STATUS_TIMEOUT_MS) {
     if (!QueryServiceStatus(hService, &status)) {
       pretty_print(LOG_ERROR, "Failed to query service status: %lu",
                    GetLastError());
@@ -78,7 +84,6 @@ static int wait_for_service_state(SC_HANDLE hService, DWORD pendingState,
     }
 
     Sleep(SERVICE_STATUS_POLL_INTERVAL_MS);
-    elapsed += SERVICE_STATUS_POLL_INTERVAL_MS;
   }
 
   pretty_print(LOG_WARNING, "Timed out waiting for service state transition");
@@ -168,8 +173,15 @@ int start_service(const char *serviceName) {
                      0,        // No arguments
                      NULL      // No argument array
                      )) {
+    DWORD err = GetLastError();
+    if (err == ERROR_SERVICE_ALREADY_RUNNING) {
+      pretty_print(LOG_INFO, "Service '%s' is already running", serviceName);
+      CloseServiceHandle(hService);
+      CloseServiceHandle(hSCM);
+      return 0;
+    }
     pretty_print(LOG_ERROR, "Failed to start service '%s': %lu", serviceName,
-                 GetLastError());
+                 err);
     CloseServiceHandle(hService);
     CloseServiceHandle(hSCM);
     return -1;
@@ -221,8 +233,15 @@ int stop_service(const char *serviceName) {
                       SERVICE_CONTROL_STOP, // Control code
                       &status               // Receives current status
                       )) {
+    DWORD err = GetLastError();
+    if (err == ERROR_SERVICE_NOT_ACTIVE) {
+      pretty_print(LOG_INFO, "Service '%s' is already stopped", serviceName);
+      CloseServiceHandle(hService);
+      CloseServiceHandle(hSCM);
+      return 0;
+    }
     pretty_print(LOG_ERROR, "Failed to send stop control to '%s': %lu",
-                 serviceName, GetLastError());
+                 serviceName, err);
     CloseServiceHandle(hService);
     CloseServiceHandle(hSCM);
     return -1;

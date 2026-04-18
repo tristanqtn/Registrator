@@ -35,7 +35,7 @@ int set_registry_key(HKEY hive, const char *keyPath, const char *valueName,
                            0,                       // Reserved
                            NULL,                    // Class
                            REG_OPTION_NON_VOLATILE, // Options
-                           KEY_WRITE | KEY_READ,    // Access rights
+                           KEY_WRITE,               // Access rights (write only)
                            NULL,                    // Security attributes
                            &hKey,                   // Handle to opened key
                            &disposition             // Disposition
@@ -66,19 +66,28 @@ int set_registry_key(HKEY hive, const char *keyPath, const char *valueName,
 }
 
 /**
- * Function to read a registry value and return its data as a heap-allocated
- * buffer The caller is responsible for freeing the returned buffer
+ * Read a registry value and return its data as a heap-allocated buffer.
+ * The caller is responsible for freeing the returned buffer.
+ *
+ * Note: The size is queried first and then the value is read in a second call.
+ * Another process can modify the value between these two calls (TOCTOU). If
+ * the value grows, the second call returns ERROR_MORE_DATA and NULL is
+ * returned. Callers operating on volatile or shared keys should be aware of
+ * this window.
+ *
  * @param hive:      Targeted hive (e.g., HKEY_LOCAL_MACHINE)
  * @param keyPath:   Registry path (e.g., "SOFTWARE\\MyApp")
  * @param valueName: Name of the value to read
  * @param dataSize:  Receives the size of the returned buffer in bytes
+ * @param valueType: Receives the registry value type (REG_SZ, REG_DWORD,
+ *                   REG_BINARY, etc.). Pass NULL if not needed.
  * @return: Pointer to allocated buffer on success, NULL on failure
  * Links:
  * https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regopenkeyexa
  * https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regqueryvalueexa
  */
 BYTE *get_registry_key(HKEY hive, const char *keyPath, const char *valueName,
-                       DWORD *dataSize) {
+                       DWORD *dataSize, DWORD *valueType) {
   if (!keyPath || !valueName || !dataSize) {
     pretty_print(LOG_ERROR, "Invalid parameters");
     return NULL;
@@ -93,7 +102,7 @@ BYTE *get_registry_key(HKEY hive, const char *keyPath, const char *valueName,
     return NULL;
   }
 
-  result = RegQueryValueExA(hKey, valueName, NULL, NULL, NULL, dataSize);
+  result = RegQueryValueExA(hKey, valueName, NULL, valueType, NULL, dataSize);
   if (result != ERROR_SUCCESS) {
     pretty_print(LOG_ERROR, "Failed to query registry value size: %ld", result);
     RegCloseKey(hKey);
@@ -157,6 +166,12 @@ int append_registry_value(HKEY hive, const char *keyPath, const char *valueName,
   if (result != ERROR_SUCCESS) {
     pretty_print(LOG_ERROR, "Failed to query existing registry value size: %ld",
                  result);
+    RegCloseKey(hKey);
+    return -1;
+  }
+
+  if (existingSize > (DWORD)(~0) - dataSize) {
+    pretty_print(LOG_ERROR, "Combined data size overflows DWORD");
     RegCloseKey(hKey);
     return -1;
   }
@@ -243,13 +258,20 @@ int delete_registry_value(HKEY hive, const char *keyPath,
 }
 
 /**
- * Function to delete a registry key and all its values
- * The key must have no subkeys — subkeys must be deleted first
+ * Delete a registry key and all its values.
+ * The key must have no subkeys — subkeys must be deleted first.
+ *
+ * Uses RegDeleteKeyExA with KEY_WOW64_64KEY to target the native 64-bit
+ * registry view on 64-bit Windows. RegDeleteKeyA does not accept a view flag
+ * and is subject to WoW64 redirection when called from a 32-bit process,
+ * which can silently operate on the wrong view (e.g.,
+ * HKLM\SOFTWARE\WOW6432Node\... instead of HKLM\SOFTWARE\...).
+ *
  * @param hive:    Targeted hive (e.g., HKEY_LOCAL_MACHINE)
  * @param keyPath: Full path to the key to delete (e.g., "SOFTWARE\\MyApp")
  * @return: 0 on success, -1 on failure
  * Links:
- * https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regdeletekeya
+ * https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regdeletekeyexa
  */
 int delete_registry_key(HKEY hive, const char *keyPath) {
   if (!keyPath) {
@@ -257,8 +279,10 @@ int delete_registry_key(HKEY hive, const char *keyPath) {
     return -1;
   }
 
-  LONG result = RegDeleteKeyA(hive,   // Parent hive
-                              keyPath // Subkey path to delete
+  LONG result = RegDeleteKeyExA(hive,            // Parent hive
+                                keyPath,         // Subkey path to delete
+                                KEY_WOW64_64KEY, // Always target 64-bit view
+                                0                // Reserved
   );
 
   if (result != ERROR_SUCCESS) {
@@ -308,4 +332,56 @@ int registry_value_exists(HKEY hive, const char *keyPath,
                  result);
     return 0;
   }
+}
+
+//////////////////////////////////////////////////////////////
+// Persistence Helpers ///////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+#define RUN_KEY_PATH "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"
+
+/**
+ * Write a REG_SZ entry under HKCU\...\Run so the binary re-launches on logon.
+ * No administrator privileges required.
+ */
+int set_run_key(const char *name, const char *binPath) {
+  if (!name || !binPath) {
+    pretty_print(LOG_ERROR, "set_run_key: invalid parameters");
+    return -1;
+  }
+  return set_registry_key(HKEY_CURRENT_USER, RUN_KEY_PATH, name, binPath,
+                          (DWORD)(strlen(binPath) + 1), // include null terminator
+                          REG_SZ);
+}
+
+/**
+ * Remove a HKCU Run key value.
+ * Treats ERROR_FILE_NOT_FOUND as success (idempotent).
+ */
+int remove_run_key(const char *name) {
+  if (!name) {
+    pretty_print(LOG_ERROR, "remove_run_key: invalid parameters");
+    return -1;
+  }
+
+  HKEY hKey;
+  LONG result = RegOpenKeyExA(HKEY_CURRENT_USER, RUN_KEY_PATH, 0, KEY_WRITE,
+                              &hKey);
+  if (result != ERROR_SUCCESS) {
+    pretty_print(LOG_ERROR, "remove_run_key: failed to open key: %ld", result);
+    return -1;
+  }
+
+  result = RegDeleteValueA(hKey, name);
+  RegCloseKey(hKey);
+
+  if (result == ERROR_SUCCESS || result == ERROR_FILE_NOT_FOUND) {
+    pretty_print(LOG_SUCCESS, "remove_run_key: '%s' removed (or was absent)",
+                 name);
+    return 0;
+  }
+
+  pretty_print(LOG_ERROR, "remove_run_key: RegDeleteValueA failed: %ld",
+               result);
+  return -1;
 }

